@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>JS Bin</title>
+</head>
+<body>
+  <div id="display">
+      Lines are drawn every 10 canvas units (red lines every 50 units), but the canvas is scaled.
+      Move the mouse and compare the results.
+      <div id="mouse"></div>
+      </div>
+
+  <canvas id="canvas"></canvas>
+  <style>
+    canvas { width: 180%; height: 180%; outline: 1px solid; }
+      #display { position: fixed; background: white; z-index: 1; }
+  </style>
+  <script>
+      function mousePositionOnCanvas(e) {
+          var el=e.target, c=el;
+          var scaleX = c.width/c.offsetWidth || 1;
+          var scaleY = c.height/c.offsetHeight || 1;
+
+          if (!isNaN(e.offsetX))
+              return { x:e.offsetX*scaleX, y:e.offsetY*scaleY };
+
+          var x=e.pageX, y=e.pageY;
+          do {
+            x -= el.offsetLeft;
+            y -= el.offsetTop;
+            el = el.offsetParent;
+          } while (el);
+          return { x: x*scaleX, y: y*scaleY };
+      }
+
+      function canvasPos(e) {
+          var p = mousePositionOnCanvas(e);
+          var x=e.pageX, y=e.pageY, el=e.target, c=el;
+          var x2=x, y2=y;
+          do {
+            x -= el.offsetLeft;
+            y -= el.offsetTop;
+            x2 -= el.offsetLeft - el.scrollLeft;
+            y2 -= el.offsetTop - el.scrollTop;
+            el = el.offsetParent;
+          } while (el);
+          return {
+              xUnscaled: x, yUnscaled: y,
+              x: p.x, y: p.y,
+              xUnscaledWithScroll: x2, yUnscaledWithScroll: y2,
+              xWithScroll: x2*(c.width/c.offsetWidth || 1), yWithScroll: y2*(c.height/c.offsetHeight || 1)
+
+          }
+      }
+
+      function canvasPos1(e) {
+          var x=e.pageX, y=e.pageY, el=e.target, c=el;
+          var x2=x, y2=y;
+          do {
+            x -= el.offsetLeft;
+            y -= el.offsetTop;
+            x2 -= el.offsetLeft - el.scrollLeft;
+            y2 -= el.offsetTop - el.scrollTop;
+            el = el.offsetParent;
+          } while (el);
+          return {
+              xUnscaled: x, yUnscaled: y,
+              x: x*(c.width/c.offsetWidth || 1), y: y*(c.height/c.offsetHeight || 1),
+              xUnscaledWithScroll: x2, yUnscaledWithScroll: y2,
+              xWithScroll: x2*(c.width/c.offsetWidth || 1), yWithScroll: y2*(c.height/c.offsetHeight || 1)
+
+          }
+      }
+
+      function $(id){ return document.getElementById(id); }
+      var canvas=$("canvas"), ctx=canvas.getContext("2d");
+      function grid() {
+          for (var i = 10; i < canvas.height; i += 10) {
+              ctx.save();
+              ctx.beginPath();
+              ctx.moveTo(0, i);
+              if (i%50 == 0) ctx.strokeStyle = "red";
+              ctx.lineTo(canvas.width, i);
+              ctx.stroke();
+              ctx.restore();
+          }
+          for (var i = 10; i < canvas.width; i += 10) {
+              ctx.save();
+              ctx.beginPath();
+              ctx.moveTo(i, 0);
+              if (i%50 == 0) ctx.strokeStyle = "red";
+              ctx.lineTo(i, canvas.height);
+              ctx.stroke();
+              ctx.restore();
+          }
+      }
+      grid();
+      /*
+      canvas.onclick = function(e){
+          var p = canvasPos(e);
+          drawPoint(p.x, p.y, "black");
+          drawPoint(p.unscaledx, p.unscaledy, "red");
+      };
+      */
+      function drawPoint(x,y,color){
+          ctx.save();
+          ctx.fillStyle=color;
+          ctx.beginPath();
+          ctx.arc(x,y,3,0,2*Math.PI);
+          ctx.fill()
+          ctx.restore();
+      }
+      canvas.onmousemove = function(e) {
+          var p = canvasPos(e);
+          $("mouse").innerHTML =
+              "scaled: "+p.x+","+p.y
+              +"<br>unscaled: "+p.xUnscaled+","+p.yUnscaled
+              +"<br>with scroll offset: "+p.xWithScroll+","+p.yWithScroll
+              +"<br>unscaled with scroll offset: "+p.xUnscaledWithScroll+","+p.yUnscaledWithScroll;
+      };
+  </script>
+
+
+</body>
+</html>
